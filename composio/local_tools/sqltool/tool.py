@@ -1,6 +1,6 @@
 
 from composio.core.local import Tool, Action
-from .actions.sql_query import SQLQUERY
+from .actions.sql_query import SqlQuery
 
 class SQL(Tool):
     """
@@ -8,7 +8,7 @@ class SQL(Tool):
     """
 
     def actions(self) -> list[Action]:
-        return [SQLQUERY]
+        return [SqlQuery]
     
     def triggers(self) -> list:
         return []
