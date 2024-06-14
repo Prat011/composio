@@ -8,12 +8,11 @@ import os
 import dotenv
 dotenv.load_dotenv()
 
-os.environ["COMPOSIO_API_KEY"] = os.getenv("COMPOSIO_API_KEY")
 
 toolset = ComposioToolSet()
 tools = toolset.get_tools(apps = [App.SQLTOOL])
 file_tool = toolset.get_tools(apps=[App.FILETOOL])
-file_tools = toolset.get_actions(actions=[Action.FILE_WRITEFILE])
+#file_tools = toolset.get_actions(actions=[Action.FILETOOL_WRITEFILE])
 llm=ChatGoogleGenerativeAI(
         model="gemini-pro", verbose=True, temperature=0.1, google_api_key=os.environ["GOOGLE_API_KEY"]
 )
@@ -63,7 +62,7 @@ file_writer_agent = Agent(
 )
 
 user_description = "The database name is company.db"
-user_input = "add the entries 1,Book,20 in the products table in database = company.db"  # Example user input
+user_input = "fetch the rows in the products table"  # Example user input
 
 form_query_task = Task(
     description=(
@@ -98,8 +97,8 @@ file_write_task = Task(
 )
 
 crew = Crew(
-    agents=[query_writer_agent,file_writer_agent],
-    tasks=[execute_query_task,file_write_task],
+    agents=[query_writer_agent, file_writer_agent],
+    tasks=[execute_query_task, file_write_task],
     process=Process.sequential
 )
 
