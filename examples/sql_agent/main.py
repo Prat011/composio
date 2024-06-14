@@ -3,19 +3,24 @@ from composio_langchain import Action, App, ComposioToolSet
 from composio.local_tools import sqltool,filetool
 import sqlite3
 from crewai import Agent, Task, Crew, Process
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 import os
 import dotenv
+
+# Load environment variables from .env file
 dotenv.load_dotenv()
 
-
+# Initialize the ComposioToolSet
 toolset = ComposioToolSet()
-tools = toolset.get_tools(apps = [App.SQLTOOL])
+
+# Get the SQL and file tools from the ComposioToolSet
+tools = toolset.get_tools(apps = [App.SQLTOOL,App.FILETOOL])
 file_tool = toolset.get_tools(apps=[App.FILETOOL])
-#file_tools = toolset.get_actions(actions=[Action.FILETOOL_WRITEFILE])
-llm=ChatGoogleGenerativeAI(
-        model="gemini-pro", verbose=True, temperature=0.1, google_api_key=os.environ["GOOGLE_API_KEY"]
-)
+
+# Initialize the ChatOpenAI model with GPT-4 and API key from environment variables
+llm=ChatOpenAI(model="gpt-4o", openai_api_key = os.environ["OPENAI_API_KEY"])
+
+# Define the Query Writer Agent
 query_writer_agent = Agent(
     role='Query Writer Agent',
     goal="""Form a SQL query based on user input and based on the information about the database.
@@ -30,6 +35,7 @@ query_writer_agent = Agent(
     tools=[],
 )
 
+# Define the Query Executor Agent
 query_executor_agent = Agent(
     role='Query Executor Agent',
     goal="""Execute the SQL query and return the results.
@@ -46,6 +52,7 @@ query_executor_agent = Agent(
     tools=tools
 )
 
+# Define the File Writer Agent
 file_writer_agent = Agent(
     role="File Writer Agent",
     goal = """Document every SQL query executed by the Query Executor Agent in a 'log.txt' file.
@@ -61,19 +68,12 @@ file_writer_agent = Agent(
     tools = file_tool,
 )
 
-user_description = "The database name is company.db"
-user_input = "fetch the rows in the products table"  # Example user input
-
-form_query_task = Task(
-    description=(
-        "This is information about the database: " + user_description +
-        ". Form a SQL query based on user input. The input is: " + user_input
-    ),
-    expected_output='SQL query string is returned. stop once the goal is achieved.',
-    agent=query_writer_agent
-)
+# User-provided description of the database and input query
+user_description = "The database name is company.db" #Edit the description for your database and tables
+user_input = "fetch the rows in the products table"  #Edit the input for the action you want it to perform
 
 
+# Define the task for executing the SQL query
 execute_query_task = Task(
     description=(
         "This is the database description="+user_description+"form a sql query based on this input="+user_input+
@@ -86,9 +86,11 @@ execute_query_task = Task(
     agent=query_executor_agent,
 )
 
+# Define the task for writing the executed SQL query to a log file
 file_write_task = Task(
     description=(
-        "the executed query has to be written in a log.txt file to record history"
+        "the executed query has to be written in a log.txt file to record history, "
+        "overwrite parameter should be set to false"
     ),
     expected_output = 'Executed query was written in the log.txt file',
     tools = file_tool,
@@ -96,11 +98,13 @@ file_write_task = Task(
     allow_delegation=False,
 )
 
+# Define the crew with the agents and tasks
 crew = Crew(
     agents=[query_writer_agent, file_writer_agent],
     tasks=[execute_query_task, file_write_task],
     process=Process.sequential
 )
 
+# Kickoff the process and print the result
 result = crew.kickoff()
 print(result)
