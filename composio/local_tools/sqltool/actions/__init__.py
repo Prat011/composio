@@ -1,1 +1,1 @@
-from.sql_query import SqlQuery
+from .sql_query import SqlQuery

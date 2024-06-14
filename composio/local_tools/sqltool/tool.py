@@ -2,7 +2,7 @@
 from composio.core.local import Tool, Action
 from .actions.sql_query import SqlQuery
 
-class SQL(Tool):
+class SqlTool(Tool):
     """
     This class enables us to execute sql queries in a database
     """
