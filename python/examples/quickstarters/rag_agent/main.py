@@ -48,7 +48,7 @@ rag_agent = Agent(
     ),
     llm=llm,
     allow_delegation=False,
-    # tools=tools,
+    tools=tools,
 )
 
 # Define the task for adding content to the RAG tool
